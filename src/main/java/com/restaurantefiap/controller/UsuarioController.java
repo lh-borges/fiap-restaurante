@@ -1,6 +1,5 @@
 package com.restaurantefiap.controller;
 
-
 import com.restaurantefiap.entities.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,6 +36,11 @@ public class UsuarioController {
         return usuarioService.getByEmail(email);
     }
 
+    @GetMapping("/buscar")
+    public List<Usuario> findByNome(@RequestParam String nome) {
+        return usuarioService.findByNomeContaining(nome);
+    }
+
     @PostMapping
     public Usuario save(@RequestBody Usuario usuario) {
         return usuarioService.create(usuario);
@@ -51,7 +55,6 @@ public class UsuarioController {
     public void changePassword(@PathVariable Long id, @PathVariable String senha) {
         usuarioService.changePassword(id, senha);
     }
-
 
     @DeleteMapping
     public void delete(@PathVariable Long id) {

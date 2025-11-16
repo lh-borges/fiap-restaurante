@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: restaurante_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: fiap-restaurante
+      MYSQL_ROOT_PASSWORD: root01
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build: .
+    container_name: restaurante_api
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/fiap-restaurante?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bahia
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root01
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
