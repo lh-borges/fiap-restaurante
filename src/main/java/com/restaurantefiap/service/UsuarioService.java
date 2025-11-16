@@ -3,6 +3,8 @@ package com.restaurantefiap.service;
 
 import java.util.List;
 
+import com.restaurantefiap.exception.DuplicateResourceException;
+import com.restaurantefiap.exception.ResourceNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,10 @@ public class UsuarioService {
         
         final String email = normalize(input.getEmail());
 
+        if (repo.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("Email", email);
+        }
+
         Usuario u = new Usuario();
         u.setNome(input.getNome());
         u.setTelefone(input.getTelefone());
@@ -40,7 +46,6 @@ public class UsuarioService {
 
         // regra de domínio: policy + hasher (Strategy)
         u.alterarSenha(input.getPassword(), policy, hasher);
-
         
         return repo.save(u);
     }
@@ -49,14 +54,14 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public Usuario getById(Long id) {
         return repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado. id=" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
     }
 
     @Transactional(readOnly = true)
     public Usuario getByEmail(String email) {
         final String key = normalize(email);
         return repo.findByEmailIgnoreCase(key)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado. email=" + key));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", "email", key));
     }
 
     @Transactional(readOnly = true)
@@ -65,13 +70,21 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public List<Usuario> listAll() { return repo.findAll(); }
 
+    @Transactional(readOnly = true)
+    public List<Usuario> findByNomeContaining(String nome) {
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("Nome não pode ser vazio para busca.");
+        }
+        return repo.findByNomeContainingIgnoreCase(nome.trim());
+    }
+
     // ========= UPDATE (perfil) =========
     @Transactional
     public Usuario update(Long id, Usuario changes) {
         Usuario u = getById(id);
 
         if (changes.getEmail() != null && !changes.getEmail().isBlank()) {
-            changes.setEmail(normalize(changes.getEmail()));
+            final String newEmail = normalize(changes.getEmail());
         }
 
         // domínio aplica as mudanças (normalização já feita acima)
@@ -93,7 +106,7 @@ public class UsuarioService {
     @Transactional
     public void delete(Long id) {
         if (!repo.existsById(id)) {
-            throw new IllegalArgumentException("Usuário não encontrado. id=" + id);
+            throw new ResourceNotFoundException("Usuário", id);
         }
         repo.deleteById(id);
     }
