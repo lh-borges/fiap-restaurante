@@ -1,35 +1,18 @@
 // com/fiap/restaurante/entities/Usuario.java
 package com.restaurantefiap.entities;
 
-import java.time.LocalDateTime;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.restaurantefiap.enums.Role;
+import com.restaurantefiap.security.PasswordHasher;
+import com.restaurantefiap.security.PasswordPolicy;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import com.restaurantefiap.enums.Role;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import com.restaurantefiap.security.PasswordHasher;
-import com.restaurantefiap.security.PasswordPolicy;
+import java.time.LocalDateTime;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -59,7 +42,6 @@ public class Usuario {
     private Role role;
 
     @NotBlank
-    @JsonIgnore
     @Column(nullable = false, length = 255)
     private String password;
 
