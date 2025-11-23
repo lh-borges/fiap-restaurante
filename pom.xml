@@ -157,6 +157,11 @@
       <artifactId>mysql-connector-j</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+
     <!-- Testes (opcional) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
