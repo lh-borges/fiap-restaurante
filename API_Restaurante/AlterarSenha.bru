@@ -1,0 +1,20 @@
+meta {
+  name: AlterarSenha
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/usuarios/1/senha/novasenha123
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

@@ -1,4 +1,4 @@
 // com/fiap/restaurante/dto/AuthDtos.java
-package com.restaurantefiap.dto;
+package com.restaurantefiap.dto.request;
 
 public record AuthRequest(String email, String password) {}

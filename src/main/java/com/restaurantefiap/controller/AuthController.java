@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.restaurantefiap.dto.AuthRequest;
-import com.restaurantefiap.dto.AuthResponse;
+import com.restaurantefiap.dto.request.AuthRequest;
+import com.restaurantefiap.dto.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import com.restaurantefiap.service.JwtService;
 

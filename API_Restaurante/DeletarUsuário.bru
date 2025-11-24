@@ -1,0 +1,20 @@
+meta {
+  name: DeletarUsuário
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/usuarios/6
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

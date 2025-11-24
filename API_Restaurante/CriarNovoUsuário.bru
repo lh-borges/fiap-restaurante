@@ -1,0 +1,31 @@
+meta {
+  name: CriarNovoUsuário
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/usuarios
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{token}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "juliana",
+    "email": "juliana@email.com",
+    "telefone": "11984567990",
+    "role": "ROLE_USER",
+    "password": "A1234570"  
+  }
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}
