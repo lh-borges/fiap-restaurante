@@ -21,6 +21,7 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     /**
      * Trata erros de validação de Bean Validation (@Valid, @NotBlank, etc.)
      */
