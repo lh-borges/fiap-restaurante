@@ -21,6 +21,7 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     /**
      * Trata erros de validação de Bean Validation (@Valid, @NotBlank, etc.)
      */
@@ -169,6 +170,10 @@ public class GlobalExceptionHandler {
 
     /**
      * Trata violação de constraint de unicidade (email duplicado, etc.)
+<<<<<<< HEAD
+=======
+     * Você pode criar uma exceção customizada para isso
+>>>>>>> origin/gilmar-docker-fix
      */
     @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(

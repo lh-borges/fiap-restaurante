@@ -32,10 +32,6 @@ public class UsuarioService {
     @Transactional
     public Usuario create(Usuario input) {
 
-        if (input.getEmail() == null || input.getEmail().isBlank()) {
-            throw new IllegalArgumentException("E-mail não pode ser vazio.");
-        }
-
         final String email = normalize(input.getEmail());
 
         if (repo.existsByEmailIgnoreCase(email)) {
@@ -50,12 +46,7 @@ public class UsuarioService {
 
         // regra de domínio: policy + hasher (Strategy)
         u.alterarSenha(input.getPassword(), policy, hasher);
-
-        Usuario salvo = repo.save(u);
-
-        salvo.setPassword(null);
-
-        return salvo;
+        return repo.save(u);
     }
 
     // ========= READ =========
