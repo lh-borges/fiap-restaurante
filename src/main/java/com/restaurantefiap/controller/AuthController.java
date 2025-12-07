@@ -1,6 +1,8 @@
 // com/fiap/restaurante/web/AuthController.java
 package com.restaurantefiap.controller;
 
+import com.restaurantefiap.dto.request.AuthRequest;
+import com.restaurantefiap.dto.response.AuthResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
