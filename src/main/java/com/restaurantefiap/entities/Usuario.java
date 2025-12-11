@@ -1,7 +1,6 @@
 // com/fiap/restaurante/entities/Usuario.java
 package com.restaurantefiap.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.restaurantefiap.enums.Role;
 import com.restaurantefiap.security.PasswordHasher;
 import com.restaurantefiap.security.PasswordPolicy;
