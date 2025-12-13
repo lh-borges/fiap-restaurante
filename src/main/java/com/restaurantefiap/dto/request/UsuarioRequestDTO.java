@@ -1,5 +1,6 @@
 package com.restaurantefiap.dto.request;
 
+import com.restaurantefiap.entities.endereco.DadosEndereco;
 import com.restaurantefiap.enums.Role;
 
 public record UsuarioRequestDTO(
@@ -7,6 +8,7 @@ public record UsuarioRequestDTO(
         String nome,
         String telefone,
         Role role,
-        String password
+        String password,
+        DadosEndereco endereco
 ) {
 }

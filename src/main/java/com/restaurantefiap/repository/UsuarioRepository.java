@@ -1,7 +1,7 @@
 // com/fiap/restaurante/repository/UsuarioRepository.java
 package com.restaurantefiap.repository;
 
-import com.restaurantefiap.entities.Usuario;
+import com.restaurantefiap.entities.usuario.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

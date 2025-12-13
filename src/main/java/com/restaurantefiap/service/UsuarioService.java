@@ -6,6 +6,7 @@ import java.util.List;
 import com.restaurantefiap.dto.request.UsuarioRequestDTO;
 import com.restaurantefiap.dto.request.UsuarioUpdateDTO;
 import com.restaurantefiap.dto.response.UsuarioResponseDTO;
+import com.restaurantefiap.entities.endereco.Endereco;
 import com.restaurantefiap.exception.DuplicateResourceException;
 import com.restaurantefiap.exception.ResourceNotFoundException;
 import com.restaurantefiap.mapper.UsuarioMapper;
@@ -14,7 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.restaurantefiap.entities.Usuario;
+import com.restaurantefiap.entities.usuario.Usuario;
 import com.restaurantefiap.repository.UsuarioRepository;
 import com.restaurantefiap.security.PasswordHasher;
 import com.restaurantefiap.security.PasswordPolicy;
@@ -100,7 +101,8 @@ public class UsuarioService {
     // ========= UPDATE (perfil) =========
     @Transactional
     public UsuarioResponseDTO update(Long id, UsuarioUpdateDTO dto) {
-        Usuario u = repo.getReferenceById(id);
+        Usuario u = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
 
         if (dto.nome() != null && !dto.nome().isBlank()) {
             u.setNome(dto.nome());
@@ -110,10 +112,17 @@ public class UsuarioService {
             u.setTelefone(dto.telefone());
         }
 
+        if (dto.endereco() != null) {
+            if (u.getEndereco() == null) {
+                u.setEndereco(new Endereco(dto.endereco()));
+            } else {
+                u.getEndereco().atualizarEndereco(dto.endereco());
+            }
+        }
+
         Usuario salvo = repo.save(u);
         return UsuarioMapper.toDTO(salvo);
     }
-
 
     // ========= CHANGE PASSWORD =========
     @Transactional

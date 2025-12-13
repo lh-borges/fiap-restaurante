@@ -3,7 +3,6 @@ package com.restaurantefiap.controller;
 import com.restaurantefiap.dto.request.UsuarioRequestDTO;
 import com.restaurantefiap.dto.request.UsuarioUpdateDTO;
 import com.restaurantefiap.dto.response.UsuarioResponseDTO;
-import com.restaurantefiap.entities.Usuario;
 import com.restaurantefiap.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

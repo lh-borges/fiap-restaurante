@@ -1,6 +1,7 @@
 // com/fiap/restaurante/entities/Usuario.java
-package com.restaurantefiap.entities;
+package com.restaurantefiap.entities.usuario;
 
+import com.restaurantefiap.entities.endereco.Endereco;
 import com.restaurantefiap.enums.Role;
 import com.restaurantefiap.security.PasswordHasher;
 import com.restaurantefiap.security.PasswordPolicy;
@@ -50,6 +51,9 @@ public class Usuario {
 
     @UpdateTimestamp
     private LocalDateTime atualizadoEm;
+
+    @Embedded
+    private Endereco endereco;
 
     /** Regras de atualização do perfil: normaliza e aplica apenas valores válidos. */
     public void atualizarPerfil(Usuario from) {

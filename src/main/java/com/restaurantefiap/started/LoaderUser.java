@@ -1,6 +1,6 @@
 package com.restaurantefiap.started;
 
-import com.restaurantefiap.entities.Usuario;
+import com.restaurantefiap.entities.usuario.Usuario;
 import com.restaurantefiap.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
