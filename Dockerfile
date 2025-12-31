@@ -1,4 +1,3 @@
-
 # ----------------------------
 # 1️⃣ BUILD STAGE (Maven)
 # ----------------------------
@@ -34,4 +33,3 @@ USER spring
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-

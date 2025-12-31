@@ -3,14 +3,19 @@ package com.restaurantefiap.service;
 
 import java.util.List;
 
+import com.restaurantefiap.dto.request.UsuarioRequestDTO;
+import com.restaurantefiap.dto.request.UsuarioUpdateDTO;
+import com.restaurantefiap.dto.response.UsuarioResponseDTO;
+import com.restaurantefiap.entities.endereco.Endereco;
 import com.restaurantefiap.exception.DuplicateResourceException;
 import com.restaurantefiap.exception.ResourceNotFoundException;
+import com.restaurantefiap.mapper.UsuarioMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.restaurantefiap.entities.Usuario;
+import com.restaurantefiap.entities.usuario.Usuario;
 import com.restaurantefiap.repository.UsuarioRepository;
 import com.restaurantefiap.security.PasswordHasher;
 import com.restaurantefiap.security.PasswordPolicy;
@@ -30,73 +35,99 @@ public class UsuarioService {
 
     // ========= CREATE =========
     @Transactional
-    public Usuario create(Usuario input) {
+    public UsuarioResponseDTO create(UsuarioRequestDTO input) {
 
-        final String email = normalize(input.getEmail());
+        if (input.email() == null || input.email().isBlank()) {
+            throw new IllegalArgumentException("E-mail não pode ser vazio.");
+        }
+
+        final String email = normalize(input.email());
 
         if (repo.existsByEmailIgnoreCase(email)) {
             throw new DuplicateResourceException("Email", email);
         }
 
-        Usuario u = new Usuario();
-        u.setNome(input.getNome());
-        u.setTelefone(input.getTelefone());
-        u.setRole(input.getRole());
+        Usuario u = UsuarioMapper.fromDTO(input);
         u.setEmail(email);
 
         // regra de domínio: policy + hasher (Strategy)
-        u.alterarSenha(input.getPassword(), policy, hasher);
-        return repo.save(u);
+        u.alterarSenha(input.password(), policy, hasher);
+
+        Usuario salvo = repo.save(u);
+
+        return UsuarioMapper.toDTO(salvo);
     }
 
     // ========= READ =========
     @Transactional(readOnly = true)
-    public Usuario getById(Long id) {
-        return repo.findById(id)
+    public UsuarioResponseDTO getByIdDTO(Long id) {
+        Usuario u = repo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
+        return UsuarioMapper.toDTO(u);
     }
 
     @Transactional(readOnly = true)
-    public Usuario getByEmail(String email) {
-        final String key = normalize(email);
-        return repo.findByEmailIgnoreCase(key)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário", "email", key));
+    public UsuarioResponseDTO getByEmailDTO(String email) {
+        Usuario u = repo.findByEmailIgnoreCase(normalize(email))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", "email", email));
+        return UsuarioMapper.toDTO(u);
     }
 
     @Transactional(readOnly = true)
-    public Page<Usuario> list(Pageable pageable) { return repo.findAll(pageable); }
+    public Page<UsuarioResponseDTO> list(Pageable pageable) {
+        return repo.findAll(pageable).map(UsuarioMapper::toDTO);
+    }
 
     @Transactional(readOnly = true)
-    public List<Usuario> listAll() { return repo.findAll(); }
+    public List<UsuarioResponseDTO> listAll() {
+        return repo.findAll()
+                .stream()
+                .map(UsuarioMapper::toDTO)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
-    public List<Usuario> findByNomeContaining(String nome) {
+    public List<UsuarioResponseDTO> findByNomeContaining(String nome) {
         if (nome == null || nome.isBlank()) {
             throw new IllegalArgumentException("Nome não pode ser vazio para busca.");
         }
-        return repo.findByNomeContainingIgnoreCase(nome.trim());
+
+        return repo.findByNomeContainingIgnoreCase(nome.trim())
+                .stream()
+                .map(UsuarioMapper::toDTO)
+                .toList();
     }
 
     // ========= UPDATE (perfil) =========
     @Transactional
-    public Usuario update(Long id, Usuario changes) {
-        Usuario u = getById(id);
+    public UsuarioResponseDTO update(Long id, UsuarioUpdateDTO dto) {
+        Usuario u = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
 
-        if (changes.getEmail() != null && !changes.getEmail().isBlank()) {
-            final String newEmail = normalize(changes.getEmail());
+        if (dto.nome() != null && !dto.nome().isBlank()) {
+            u.setNome(dto.nome());
         }
 
-        // domínio aplica as mudanças (normalização já feita acima)
-        u.atualizarPerfil(changes);
+        if (dto.telefone() != null && !dto.telefone().isBlank()) {
+            u.setTelefone(dto.telefone());
+        }
 
-        return repo.save(u);
+        if (dto.endereco() != null) {
+            if (u.getEndereco() == null) {
+                u.setEndereco(new Endereco(dto.endereco()));
+            } else {
+                u.getEndereco().atualizarEndereco(dto.endereco());
+            }
+        }
+
+        Usuario salvo = repo.save(u);
+        return UsuarioMapper.toDTO(salvo);
     }
 
     // ========= CHANGE PASSWORD =========
     @Transactional
     public void changePassword(Long id, String senhaPlana) {
- 
-        Usuario u = getById(id);
+        Usuario u = repo.getReferenceById(id);
         u.alterarSenha(senhaPlana, policy, hasher);
         repo.save(u);
     }
