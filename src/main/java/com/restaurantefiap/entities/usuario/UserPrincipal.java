@@ -1,5 +1,5 @@
 // com/fiap/restaurante/security/UserPrincipal.java
-package com.restaurantefiap.entities;
+package com.restaurantefiap.entities.usuario;
 
 import java.util.Collection;
 import java.util.List;

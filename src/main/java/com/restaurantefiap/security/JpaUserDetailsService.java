@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.restaurantefiap.entities.UserPrincipal;
+import com.restaurantefiap.entities.usuario.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import com.restaurantefiap.repository.UsuarioRepository;
 
