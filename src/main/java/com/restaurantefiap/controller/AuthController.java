@@ -48,10 +48,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
         // autentica credenciais (vai usar UserDetailsService + PasswordEncoder)
-        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.email(), req.password()));
+        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.login(), req.password()));
 
         // carrega usuário e gera token
-        var userDetails = userDetailsService.loadUserByUsername(req.email());
+        var userDetails = userDetailsService.loadUserByUsername(req.login());
         String token = jwtService.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponse(token));
