@@ -1,9 +1,9 @@
-package com.example.fiap.restaurante_fiap;
+package com.restaurantefiap;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = RestauranteFiapApplication.class)
 class RestauranteFiapApplicationTests {
 
 	@Test
