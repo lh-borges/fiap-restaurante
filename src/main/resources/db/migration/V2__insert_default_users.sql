@@ -8,4 +8,6 @@ VALUES
 
 ('maria@teste.com', 'Maria Oliveira', '21977776666', 'ROLE_USER', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'),
 
-('empresa@teste.com', 'Conta Empresa', '31966665555', 'ROLE_ADMIN', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG');
+('danilo.bossanova@hotmail.com', 'Danilo Bossanova', '62981774375','ROLE_ADMIN','$2a$12$rlibw6lyHFNvpXlZrExruubvVl5Lu4IoOE1FeR5CbSqmgNg4VB/wa'),
+
+('empresa@teste.com', 'Conta Empresa', '31966665555', 'ROLE_ADMIN','$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG');
