@@ -1,43 +1,86 @@
-version: '3.8'
-
 services:
 
+  # =======================
+  #  Database (MySQL)
+  # =======================
   mysql:
     image: mysql:8.0
     container_name: restaurante_mysql
 
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      # Senha do root (obrigatória)
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+
+      # Banco que será criado automaticamente
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fiap_restaurante}
+
+      # Usuário de aplicação (não usar root na API)
+      MYSQL_USER: ${MYSQL_USER:-fiap_user}
+
+      # Senha do usuário de aplicação (obrigatória se MYSQL_USER existir)
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
 
     ports:
+      # Porta externa 3307 -> interna 3306 (evita conflito com MySQL local)
       - "3307:3306"
 
     command: --default-authentication-plugin=mysql_native_password
 
     volumes:
+      # Persistência dos dados
       - mysql_data:/var/lib/mysql
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      # Aguarda o MySQL aceitar conexões e responder
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
     networks:
       - app-net
 
+
+  # =======================
+  #  API (Spring Boot)
+  # =======================
   api:
     build: .
     container_name: restaurante_api
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      # -------- Database ----------
+      DB_HOST: mysql
+      DB_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fiap_restaurante}
+      MYSQL_USER: ${MYSQL_USER:-fiap_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-123456}
+
+      # -------- JWT ----------
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-dev}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+
+      # -------- Server ----------
+      # Dentro do container, mantenha 8080 (simples e previsível)
+      SERVER_PORT: 8080
+
+      # -------- Spring Profile ----------
+      # No docker, o default tem que ser docker
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+
+      # -------- JPA ----------
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-true}
+      JPA_FORMAT_SQL: ${JPA_FORMAT_SQL:-true}
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+
+      # -------- DevTools ----------
+      # Em container normalmente é OFF
+      DEVTOOLS_ENABLED: ${DEVTOOLS_ENABLED:-false}
+      DEVTOOLS_LIVERELOAD: ${DEVTOOLS_LIVERELOAD:-false}
 
     ports:
-      - "8080:8080"
+      # Porta externa -> porta interna fixa (8080)
+      - "${SERVER_PORT:-8080}:8080"
 
     depends_on:
       mysql:
@@ -45,6 +88,7 @@ services:
 
     networks:
       - app-net
+
 
 volumes:
   mysql_data:
