@@ -1,11 +1,13 @@
 package com.restaurantefiap.service;
 
+import com.restaurantefiap.dto.request.AlterarSenhaRequestDTO;
 import com.restaurantefiap.dto.request.UsuarioRequestDTO;
 import com.restaurantefiap.dto.request.UsuarioUpdateDTO;
 import com.restaurantefiap.dto.response.UsuarioResponseDTO;
 import com.restaurantefiap.entities.endereco.Endereco;
 import com.restaurantefiap.entities.usuario.Usuario;
 import com.restaurantefiap.exception.DuplicateResourceException;
+import com.restaurantefiap.exception.InvalidPasswordException;
 import com.restaurantefiap.exception.ResourceNotFoundException;
 import com.restaurantefiap.mapper.UsuarioMapper;
 import com.restaurantefiap.repository.UsuarioRepository;
@@ -180,17 +182,36 @@ public class UsuarioService {
     /**
      * Altera a senha do usuário.
      *
-     * <p>Valida a senha pela policy e aplica hash.</p>
+     * <p>Valida a senha atual antes de permitir a alteração.
+     * A nova senha é validada pela policy e hasheada.</p>
      *
-     * @param id         identificador do usuário
-     * @param novaSenha  nova senha em texto plano
-     * @throws ResourceNotFoundException se não encontrado
+     * @param id  identificador do usuário
+     * @param dto dados com senha atual e nova senha
+     * @throws ResourceNotFoundException se usuário não encontrado
+     * @throws InvalidPasswordException  se senha atual incorreta
+     * @throws IllegalArgumentException  se nova senha não atende à policy
      */
     @Transactional
-    public void alterarSenha(Long id, String novaSenha) {
+    public void alterarSenha(Long id, AlterarSenhaRequestDTO dto) {
         Usuario usuario = buscarUsuarioAtivoPorId(id);
-        usuario.alterarSenha(novaSenha, passwordPolicy, passwordHasher);
+
+        validarSenhaAtual(usuario, dto.senhaAtual());
+
+        usuario.alterarSenha(dto.novaSenha(), passwordPolicy, passwordHasher);
         repository.save(usuario);
+    }
+
+    /**
+     * Valida se a senha atual informada corresponde à senha do usuário.
+     *
+     * @param usuario    usuário a validar
+     * @param senhaAtual senha informada pelo usuário
+     * @throws InvalidPasswordException se senha não corresponde
+     */
+    private void validarSenhaAtual(Usuario usuario, String senhaAtual) {
+        if (!passwordHasher.matches(senhaAtual, usuario.getPassword())) {
+            throw new InvalidPasswordException("Senha atual incorreta");
+        }
     }
 
     // ========== DELETE (Soft Delete) ==========
