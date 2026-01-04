@@ -5,6 +5,7 @@ import com.restaurantefiap.enums.Role;
 import com.restaurantefiap.security.PasswordHasher;
 import com.restaurantefiap.security.PasswordPolicy;
 
+import com.restaurantefiap.validation.ValidationPatterns;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -20,6 +21,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -86,6 +88,7 @@ public class Usuario {
 
     @NotBlank
     @Column(nullable = false, length = 30)
+    @Pattern(regexp = ValidationPatterns.TELEFONE_BR, message = "Telefone inválido (padrão BR)")
     private String telefone;
 
     @Enumerated(EnumType.STRING)
