@@ -5,6 +5,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -59,7 +60,7 @@ public class GlobalExceptionHandler {
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
-                "Email ou senha inválidos."
+                "Login ou senha inválidos."
         );
 
         problemDetail.setTitle("Authentication Failed");
@@ -283,4 +284,25 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problemDetail);
     }
+
+    /**
+     * Trata acesso negado (403 Forbidden)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(
+            AccessDeniedException ex,
+            WebRequest request) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                "Você não tem permissão para acessar este recurso."
+        );
+
+        problemDetail.setTitle("Access Denied");
+        problemDetail.setType(URI.create("https://api.restaurante.com/errors/access-denied"));
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
+    }
+
 }
