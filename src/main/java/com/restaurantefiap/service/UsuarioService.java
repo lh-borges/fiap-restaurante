@@ -1,148 +1,296 @@
-// service/UsuarioService.java
 package com.restaurantefiap.service;
-
-import java.util.List;
 
 import com.restaurantefiap.dto.request.UsuarioRequestDTO;
 import com.restaurantefiap.dto.request.UsuarioUpdateDTO;
 import com.restaurantefiap.dto.response.UsuarioResponseDTO;
 import com.restaurantefiap.entities.endereco.Endereco;
+import com.restaurantefiap.entities.usuario.Usuario;
 import com.restaurantefiap.exception.DuplicateResourceException;
 import com.restaurantefiap.exception.ResourceNotFoundException;
 import com.restaurantefiap.mapper.UsuarioMapper;
+import com.restaurantefiap.repository.UsuarioRepository;
+import com.restaurantefiap.security.PasswordHasher;
+import com.restaurantefiap.security.PasswordPolicy;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.restaurantefiap.entities.usuario.Usuario;
-import com.restaurantefiap.repository.UsuarioRepository;
-import com.restaurantefiap.security.PasswordHasher;
-import com.restaurantefiap.security.PasswordPolicy;
+import java.time.LocalDateTime;
+import java.util.List;
 
+/**
+ * Service para operações de negócio relacionadas a {@link Usuario}.
+ *
+ * <p>Gerencia criação, atualização, busca e exclusão (soft delete) de usuários.</p>
+ *
+ * @author Thiago de Jesus
+ * @author Danilo de Paula
+ */
 @Service
 public class UsuarioService {
 
-    private final UsuarioRepository repo;
-    private final PasswordPolicy policy;
-    private final PasswordHasher hasher;
+    private final UsuarioRepository repository;
+    private final PasswordPolicy passwordPolicy;
+    private final PasswordHasher passwordHasher;
 
-    public UsuarioService(UsuarioRepository repo, PasswordPolicy policy, PasswordHasher hasher) {
-        this.repo = repo;
-        this.policy = policy;
-        this.hasher = hasher;
+    public UsuarioService(
+            UsuarioRepository repository,
+            PasswordPolicy passwordPolicy,
+            PasswordHasher passwordHasher
+    ) {
+        this.repository = repository;
+        this.passwordPolicy = passwordPolicy;
+        this.passwordHasher = passwordHasher;
     }
 
-    // ========= CREATE =========
+    // ========== CREATE ==========
+
+    /**
+     * Cria um novo usuário.
+     *
+     * <p>Valida duplicidade de login e email antes de persistir.
+     * A senha é validada pela policy e hasheada.</p>
+     *
+     * @param dto dados do usuário
+     * @return DTO do usuário criado
+     * @throws IllegalArgumentException    se login ou email forem vazios
+     * @throws DuplicateResourceException  se login ou email já existirem
+     */
     @Transactional
-    public UsuarioResponseDTO create(UsuarioRequestDTO input) {
+    public UsuarioResponseDTO criar(UsuarioRequestDTO dto) {
+        validarCamposObrigatorios(dto);
 
-        if (input.email() == null || input.email().isBlank()) {
-            throw new IllegalArgumentException("E-mail não pode ser vazio.");
-        }
+        String loginNormalizado = normalizar(dto.login());
+        String emailNormalizado = normalizar(dto.email());
 
-        final String email = normalize(input.email());
+        validarDuplicidade(loginNormalizado, emailNormalizado);
 
-        if (repo.existsByEmailIgnoreCase(email)) {
-            throw new DuplicateResourceException("Email", email);
-        }
+        Usuario usuario = UsuarioMapper.paraEntidade(dto);
+        usuario.setLogin(loginNormalizado);
+        usuario.setEmail(emailNormalizado);
+        usuario.alterarSenha(dto.password(), passwordPolicy, passwordHasher);
 
-        Usuario u = UsuarioMapper.fromDTO(input);
-        u.setEmail(email);
+        Usuario salvo = repository.save(usuario);
 
-        // regra de domínio: policy + hasher (Strategy)
-        u.alterarSenha(input.password(), policy, hasher);
-
-        Usuario salvo = repo.save(u);
-
-        return UsuarioMapper.toDTO(salvo);
+        return UsuarioMapper.paraDto(salvo);
     }
 
-    // ========= READ =========
+    // ========== READ ==========
+
+    /**
+     * Busca usuário ativo por ID.
+     *
+     * @param id identificador do usuário
+     * @return DTO do usuário
+     * @throws ResourceNotFoundException se não encontrado
+     */
     @Transactional(readOnly = true)
-    public UsuarioResponseDTO getByIdDTO(Long id) {
-        Usuario u = repo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
-        return UsuarioMapper.toDTO(u);
+    public UsuarioResponseDTO buscarPorId(Long id) {
+        Usuario usuario = buscarUsuarioAtivoPorId(id);
+        return UsuarioMapper.paraDto(usuario);
     }
 
+    /**
+     * Busca usuário ativo por login.
+     *
+     * @param login identificador de login
+     * @return DTO do usuário
+     * @throws ResourceNotFoundException se não encontrado
+     */
     @Transactional(readOnly = true)
-    public UsuarioResponseDTO getByEmailDTO(String email) {
-        Usuario u = repo.findByEmailIgnoreCase(normalize(email))
+    public UsuarioResponseDTO buscarPorLogin(String login) {
+        Usuario usuario = repository.findByLoginIgnoreCase(normalizar(login))
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário", "login", login));
+
+        return UsuarioMapper.paraDto(usuario);
+    }
+
+    /**
+     * Busca usuário ativo por email.
+     *
+     * @param email email do usuário
+     * @return DTO do usuário
+     * @throws ResourceNotFoundException se não encontrado
+     */
+    @Transactional(readOnly = true)
+    public UsuarioResponseDTO buscarPorEmail(String email) {
+        Usuario usuario = repository.findByEmailIgnoreCase(normalizar(email))
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", "email", email));
-        return UsuarioMapper.toDTO(u);
+
+        return UsuarioMapper.paraDto(usuario);
     }
 
+    /**
+     * Lista usuários ativos com paginação.
+     *
+     * @param pageable configuração de paginação
+     * @return página de usuários
+     */
     @Transactional(readOnly = true)
-    public Page<UsuarioResponseDTO> list(Pageable pageable) {
-        return repo.findAll(pageable).map(UsuarioMapper::toDTO);
+    public Page<UsuarioResponseDTO> listar(Pageable pageable) {
+        return repository.findAllAtivos(pageable)
+                .map(UsuarioMapper::paraDto);
     }
 
+    /**
+     * Busca usuários ativos pelo nome (busca parcial).
+     *
+     * @param nome termo de busca
+     * @return lista de usuários encontrados
+     * @throws IllegalArgumentException se nome for vazio
+     */
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> listAll() {
-        return repo.findAll()
-                .stream()
-                .map(UsuarioMapper::toDTO)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> findByNomeContaining(String nome) {
-        if (nome == null || nome.isBlank()) {
+    public List<UsuarioResponseDTO> buscarPorNome(String nome) {
+        if (!possuiValor(nome)) {
             throw new IllegalArgumentException("Nome não pode ser vazio para busca.");
         }
 
-        return repo.findByNomeContainingIgnoreCase(nome.trim())
+        return repository.findByNomeContainingIgnoreCase(nome.trim())
                 .stream()
-                .map(UsuarioMapper::toDTO)
+                .map(UsuarioMapper::paraDto)
                 .toList();
     }
 
-    // ========= UPDATE (perfil) =========
+    // ========== UPDATE ==========
+
+    /**
+     * Atualiza dados do perfil do usuário.
+     *
+     * <p>Atualiza apenas campos não nulos do DTO.</p>
+     *
+     * @param id  identificador do usuário
+     * @param dto dados a atualizar
+     * @return DTO do usuário atualizado
+     * @throws ResourceNotFoundException se não encontrado
+     */
     @Transactional
-    public UsuarioResponseDTO update(Long id, UsuarioUpdateDTO dto) {
-        Usuario u = repo.findById(id)
+    public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto) {
+        Usuario usuario = buscarUsuarioAtivoPorId(id);
+
+        atualizarCamposBasicos(usuario, dto);
+        atualizarEndereco(usuario, dto);
+
+        Usuario salvo = repository.save(usuario);
+
+        return UsuarioMapper.paraDto(salvo);
+    }
+
+    /**
+     * Altera a senha do usuário.
+     *
+     * <p>Valida a senha pela policy e aplica hash.</p>
+     *
+     * @param id         identificador do usuário
+     * @param novaSenha  nova senha em texto plano
+     * @throws ResourceNotFoundException se não encontrado
+     */
+    @Transactional
+    public void alterarSenha(Long id, String novaSenha) {
+        Usuario usuario = buscarUsuarioAtivoPorId(id);
+        usuario.alterarSenha(novaSenha, passwordPolicy, passwordHasher);
+        repository.save(usuario);
+    }
+
+    // ========== DELETE (Soft Delete) ==========
+
+    /**
+     * Exclui usuário (soft delete).
+     *
+     * <p>Marca o campo {@code deletadoEm} com a data atual.</p>
+     *
+     * @param id identificador do usuário
+     * @throws ResourceNotFoundException se não encontrado
+     */
+    @Transactional
+    public void excluir(Long id) {
+        Usuario usuario = buscarUsuarioAtivoPorId(id);
+        repository.delete(usuario);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<UsuarioResponseDTO> listarTodos() {
+        return repository.findAllAtivos()
+                .stream()
+                .map(UsuarioMapper::paraDto)
+                .toList();
+    }
+
+
+    // ========== Métodos Auxiliares (privados) ==========
+
+    /**
+     * Busca usuário ativo por ID ou lança exceção.
+     */
+    private Usuario buscarUsuarioAtivoPorId(Long id) {
+        return repository.findAtivoById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
-
-        if (dto.nome() != null && !dto.nome().isBlank()) {
-            u.setNome(dto.nome());
-        }
-
-        if (dto.telefone() != null && !dto.telefone().isBlank()) {
-            u.setTelefone(dto.telefone());
-        }
-
-        if (dto.endereco() != null) {
-            if (u.getEndereco() == null) {
-                u.setEndereco(new Endereco(dto.endereco()));
-            } else {
-                u.getEndereco().atualizarEndereco(dto.endereco());
-            }
-        }
-
-        Usuario salvo = repo.save(u);
-        return UsuarioMapper.toDTO(salvo);
     }
 
-    // ========= CHANGE PASSWORD =========
-    @Transactional
-    public void changePassword(Long id, String senhaPlana) {
-        Usuario u = repo.getReferenceById(id);
-        u.alterarSenha(senhaPlana, policy, hasher);
-        repo.save(u);
-    }
-
-    // ========= DELETE =========
-    @Transactional
-    public void delete(Long id) {
-        if (!repo.existsById(id)) {
-            throw new ResourceNotFoundException("Usuário", id);
+    /**
+     * Valida campos obrigatórios do DTO de criação.
+     */
+    private void validarCamposObrigatorios(UsuarioRequestDTO dto) {
+        if (!possuiValor(dto.login())) {
+            throw new IllegalArgumentException("Login não pode ser vazio.");
         }
-        repo.deleteById(id);
+        if (!possuiValor(dto.email())) {
+            throw new IllegalArgumentException("E-mail não pode ser vazio.");
+        }
     }
 
-    // ========= helpers =========
-    private static String normalize(String email) {
-        return email == null ? null : email.trim().toLowerCase();
+    /**
+     * Valida se login ou email já existem no banco.
+     */
+    private void validarDuplicidade(String login, String email) {
+        if (repository.existsByLoginIgnoreCase(login)) {
+            throw new DuplicateResourceException("Login", login);
+        }
+        if (repository.existsByEmailIgnoreCase(email)) {
+            throw new DuplicateResourceException("Email", email);
+        }
+    }
+
+    /**
+     * Atualiza campos básicos do usuário (nome, telefone).
+     */
+    private void atualizarCamposBasicos(Usuario usuario, UsuarioUpdateDTO dto) {
+        if (possuiValor(dto.nome())) {
+            usuario.setNome(dto.nome());
+        }
+        if (possuiValor(dto.telefone())) {
+            usuario.setTelefone(dto.telefone());
+        }
+    }
+
+    /**
+     * Atualiza ou cria endereço do usuário.
+     */
+    private void atualizarEndereco(Usuario usuario, UsuarioUpdateDTO dto) {
+        if (dto.endereco() == null) {
+            return;
+        }
+
+        if (usuario.getEndereco() == null) {
+            usuario.setEndereco(new Endereco(dto.endereco()));
+        } else {
+            usuario.getEndereco().atualizarEndereco(dto.endereco());
+        }
+    }
+
+    /**
+     * Normaliza string: trim + lowercase.
+     */
+    private String normalizar(String valor) {
+        return valor == null ? null : valor.trim().toLowerCase();
+    }
+
+    /**
+     * Verifica se string possui valor (não nula e não vazia).
+     */
+    private boolean possuiValor(String valor) {
+        return valor != null && !valor.isBlank();
     }
 }
