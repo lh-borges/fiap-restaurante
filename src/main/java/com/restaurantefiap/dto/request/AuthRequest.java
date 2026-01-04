@@ -1,7 +1,7 @@
 package com.restaurantefiap.dto.request;
 
 public record AuthRequest(
-      String email,
+      String login,
       String password
 ) {
 }

@@ -1,13 +1,72 @@
-INSERT INTO usuarios (email, nome, telefone, role, password)
-VALUES
-('admin@admin.com', 'Admin', '11999999999', 'ROLE_ADMIN', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'),
+-- V2__insert_default_users.sql
+-- Seeds default para ambiente de desenvolvimento/avaliação.
+-- Idempotente: não duplica se rodar novamente.
+-- Regras:
+-- - Não insere se já existir usuário com o mesmo email OU login.
+-- Senha padrão: senhaParaTeste@2025
 
-('gilmar@teste.com', 'Gilmar Moraes', '48988887777', 'ROLE_USER', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'),
-
-('joao@teste.com', 'João Silva', '11988884444', 'ROLE_USER', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'),
-
-('maria@teste.com', 'Maria Oliveira', '21977776666', 'ROLE_USER', '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'),
-
-('danilo.bossanova@hotmail.com', 'Danilo Bossanova', '62981774375','ROLE_ADMIN','$2a$12$rlibw6lyHFNvpXlZrExruubvVl5Lu4IoOE1FeR5CbSqmgNg4VB/wa'),
-
-('empresa@teste.com', 'Conta Empresa', '31966665555', 'ROLE_ADMIN','$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG');
+INSERT INTO usuarios (login, email, nome, telefone, role, password)
+SELECT seed.login, seed.email, seed.nome, seed.telefone, seed.role, seed.password
+FROM (
+         SELECT
+             'admin'                         AS login,
+             'admin@restaurantefiap.com'     AS email,
+             'Admin'                         AS nome,
+             '11999999999'                   AS telefone,
+             'MASTER'                        AS role,
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG' AS password
+         UNION ALL
+         SELECT
+             'gilmar.moraes',
+             'gilmar@restaurantefiap.com',
+             'Gilmar Moraes',
+             '48988887777',
+             'DONO_RESTAURANTE',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'danilo.silva',
+             'danilo@restaurantefiap.com',
+             'Danilo Silva',
+             '62999999999',
+             'MASTER',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'ju.olio',
+             'ju.olio@restaurantefiap.com',
+             'Ju Olio',
+             '21977776666',
+             'DONO_RESTAURANTE',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'thiago.jesus',
+             'thiago.jesus@restaurantefiap.com',
+             'Thiago de Jesus',
+             '31966665555',
+             'CLIENTE',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'Luiz.borges',
+             'luiz.borges@restaurantefiap.com',
+             'Luiz Borges',
+             '31966665555',
+             'CLIENTE',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'otavio.fernando',
+             'otavio.fernando@restaurantefiap.com',
+             'Otavio Fernando',
+             '31966665555',
+             'CLIENTE',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+     ) AS seed
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM usuarios u
+    WHERE u.login = seed.login
+   OR u.email = seed.email
+    );

@@ -8,12 +8,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -21,77 +23,99 @@ import java.util.List;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
-    @Operation(summary = "Lista todos os usuários", description = "Retorna uma lista completa de usuários cadastrados")
-    @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
-    @GetMapping()
-    public List<UsuarioResponseDTO> findAll() {
-        return usuarioService.listAll();
+    public UsuarioController(UsuarioService usuarioService) {
+        this.usuarioService = usuarioService;
     }
 
-    @Operation(summary = "Lista de usuários paginados", description = "Retorna usuários em formato de página")
+    // ========= READ =========
+
+    @Operation(summary = "Lista usuários ativos paginados")
     @GetMapping("/page")
     public Page<UsuarioResponseDTO> findAll(Pageable pageable) {
-        return usuarioService.list(pageable);
+        return usuarioService.listar(pageable);
     }
 
-    @Operation(summary = "Busca usuário por ID", description = "Retorna um usuário específico pelo seu identificador")
+    @Operation(summary = "Busca usuário ativo por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public UsuarioResponseDTO findById(@PathVariable Long id) {
-        return usuarioService.getByIdDTO(id);
+        return usuarioService.buscarPorId(id);
     }
 
-    @Operation(summary = "Busca usuário por e-mail", description = "Retorna um usuário específico pelo e-mail")
+    @Operation(summary = "Busca usuário ativo por e-mail")
     @GetMapping("/email/{email}")
     public UsuarioResponseDTO findByEmail(@PathVariable String email) {
-        return usuarioService.getByEmailDTO(email);
+        return usuarioService.buscarPorEmail(email);
     }
 
-    @Operation(summary = "Busca usuários pelo nome", description = "Retorna usuários cujo nome contém o texto informado")
+    @Operation(summary = "Busca usuários ativos pelo nome")
     @GetMapping("/buscar")
     public List<UsuarioResponseDTO> findByNome(@RequestParam String nome) {
-        return usuarioService.findByNomeContaining(nome);
+        return usuarioService.buscarPorNome(nome);
     }
 
-    @Operation(summary = "Cria novo usuário", description = "Cadastra um novo usuário no sistema")
+    // ========= CREATE =========
+
+    @Operation(summary = "Cria novo usuário")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> save(@Valid @RequestBody UsuarioRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.create(dto));
+    public ResponseEntity<UsuarioResponseDTO> save(
+            @Valid @RequestBody UsuarioRequestDTO dto
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(usuarioService.criar(dto));
     }
 
     // ========= UPDATE =========
-    @Operation(summary = "Atualiza dados do usuário", description = "Atualiza informações de perfil de um usuário existente")
-    @PutMapping("/{id}")
-    public UsuarioResponseDTO update(@PathVariable Long id, @RequestBody UsuarioUpdateDTO dto) {
-        return usuarioService.update(id, dto);
+
+    @Operation(summary = "Atualiza dados do usuário")
+    @PutMapping("/{id:\\d+}")
+    public UsuarioResponseDTO update(
+            @PathVariable Long id,
+            @RequestBody UsuarioUpdateDTO dto
+    ) {
+        return usuarioService.atualizar(id, dto);
     }
 
-    // ========= CHANGE PASSWORD =========
-    @Operation(summary = "Altera senha do usuário", description = "Atualiza a senha de um usuário específico")
-    @PutMapping("/{id}/senha")
-    public ResponseEntity<Void> changePassword(@PathVariable Long id, @RequestBody String novaSenha) {
-        usuarioService.changePassword(id, novaSenha);
+    @Operation(summary = "Altera senha do usuário")
+    @PutMapping("/{id:\\d+}/senha")
+    public ResponseEntity<Void> changePassword(
+            @PathVariable Long id,
+            @RequestBody String novaSenha
+    ) {
+        usuarioService.alterarSenha(id, novaSenha);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Remove usuário", description = "Exclui um usuário pelo seu ID")
+    // ========= DELETE =========
+
+    @Operation(summary = "Remove usuário (soft delete)")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Usuário removido com sucesso"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        usuarioService.delete(id);
+        usuarioService.excluir(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ======= ME ===================
+
+    @Operation(summary = "Retorna o usuário logado (me)")
+    @GetMapping("/me")
+    public UsuarioResponseDTO me(Authentication authentication) {
+        String login = authentication.getName();
+        return usuarioService.buscarPorLogin(login);
+    }
+
 }

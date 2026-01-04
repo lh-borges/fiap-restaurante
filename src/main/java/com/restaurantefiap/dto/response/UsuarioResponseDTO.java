@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 public record UsuarioResponseDTO(
         Long id,
+        String login,
         String email,
         String nome,
         String telefone,
