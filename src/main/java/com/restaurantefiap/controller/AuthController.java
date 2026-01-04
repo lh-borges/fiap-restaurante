@@ -32,7 +32,7 @@ public class AuthController {
 
     @Operation(
             summary = "Login do usuário",
-            description = "Recebe email e senha, autentica e retorna um token JWT",
+            description = "Recebe login e senha, autentica e retorna um token JWT",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
