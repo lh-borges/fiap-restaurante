@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,7 +47,7 @@ public class AuthController {
             }
     )
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest req) {
         // autentica credenciais (vai usar UserDetailsService + PasswordEncoder)
         authManager.authenticate(new UsernamePasswordAuthenticationToken(req.login(), req.password()));
 
