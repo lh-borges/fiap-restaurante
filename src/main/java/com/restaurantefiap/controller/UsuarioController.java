@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
+
 import java.util.List;
 
 @RestController
@@ -40,7 +42,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public UsuarioResponseDTO findById(@PathVariable Long id) {
         return usuarioService.buscarPorId(id);
     }
@@ -76,7 +78,7 @@ public class UsuarioController {
     // ========= UPDATE =========
 
     @Operation(summary = "Atualiza dados do usuário")
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public UsuarioResponseDTO update(
             @PathVariable Long id,
             @RequestBody UsuarioUpdateDTO dto
@@ -85,7 +87,7 @@ public class UsuarioController {
     }
 
     @Operation(summary = "Altera senha do usuário")
-    @PutMapping("/{id}/senha")
+    @PutMapping("/{id:\\d+}/senha")
     public ResponseEntity<Void> changePassword(
             @PathVariable Long id,
             @RequestBody String novaSenha
@@ -101,9 +103,19 @@ public class UsuarioController {
             @ApiResponse(responseCode = "204", description = "Usuário removido com sucesso"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         usuarioService.excluir(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ======= ME ===================
+
+    @Operation(summary = "Retorna o usuário logado (me)")
+    @GetMapping("/me")
+    public UsuarioResponseDTO me(Authentication authentication) {
+        String login = authentication.getName();
+        return usuarioService.buscarPorLogin(login);
+    }
+
 }
