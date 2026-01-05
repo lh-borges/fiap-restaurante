@@ -104,6 +104,20 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- H2 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -140,6 +154,43 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Jacoco -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>com/restaurantefiap/dto/**/*</exclude>
+                        <exclude>com/restaurantefiap/entities/**/*</exclude>
+                        <exclude>com/restaurantefiap/exceptions/**/*</exclude>
+
+                        <exclude>**/*DTO.*</exclude>
+                        <exclude>**/*Request.*</exclude>
+                        <exclude>**/*Response.*</exclude>
+
+                        <exclude>com/restaurantefiap/RestauranteFiapApplication.*</exclude>
+                        <exclude>com/restaurantefiap/config/**/*</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
