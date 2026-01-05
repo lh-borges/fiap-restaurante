@@ -1,4 +1,3 @@
-// com/fiap/restaurante/security/JpaUserDetailsService.java
 package com.restaurantefiap.security;
 
 import org.springframework.security.core.userdetails.UserDetails;
