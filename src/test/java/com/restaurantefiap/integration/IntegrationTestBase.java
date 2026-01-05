@@ -7,9 +7,12 @@ import com.restaurantefiap.repository.UsuarioRepository;
 import com.restaurantefiap.security.PasswordHasher;
 
 import org.junit.jupiter.api.BeforeEach;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,38 +41,51 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected PasswordHasher passwordHasher;
 
-    // Usuários de teste (IDs serão preenchidos após persist)
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
+
     protected Usuario usuarioMaster;
     protected Usuario usuarioDonoRestaurante;
     protected Usuario usuarioCliente;
 
-    // Senha padrão para todos os usuários de teste
     protected static final String SENHA_PADRAO = "Teste@123";
+
+    @BeforeEach
+    void setUpBase() {
+        limparBanco();
+
+        usuarioMaster = criarUsuarioTeste(
+                "master.teste." + sufixoUnico(),
+                "master+" + sufixoUnico() + "@teste.com",
+                "Master Teste",
+                Role.MASTER
+        );
+
+        usuarioDonoRestaurante = criarUsuarioTeste(
+                "dono.teste." + sufixoUnico(),
+                "dono+" + sufixoUnico() + "@teste.com",
+                "Dono Teste",
+                Role.DONO_RESTAURANTE
+        );
+
+        usuarioCliente = criarUsuarioTeste(
+                "cliente.teste." + sufixoUnico(),
+                "cliente+" + sufixoUnico() + "@teste.com",
+                "Cliente Teste",
+                Role.CLIENTE
+        );
+    }
+
+    private void limparBanco() {
+        // H2 em memória: limpa fisicamente para evitar conflitos com soft delete
+        // Ajuste a ordem se tiver FK's em outras tabelas
+        jdbcTemplate.execute("DELETE FROM usuarios");
+    }
 
     private static String sufixoUnico() {
         return java.util.UUID.randomUUID().toString().substring(0, 8);
     }
 
-    @BeforeEach
-    void setUpBase() {
-        // Limpa banco antes de cada teste
-        //usuarioRepository.deleteAll();
-
-        // Cria usuários de teste para cada role
-        usuarioMaster = criarUsuarioTeste("master.teste." + sufixoUnico(), "master+" + sufixoUnico() + "@teste.com", "Master Teste", Role.MASTER);
-        usuarioDonoRestaurante = criarUsuarioTeste("dono.teste." + sufixoUnico(), "dono+" + sufixoUnico() + "@teste.com", "Dono Teste", Role.DONO_RESTAURANTE);
-        usuarioCliente = criarUsuarioTeste("cliente.teste." + sufixoUnico(), "cliente+" + sufixoUnico() + "@teste.com", "Cliente Teste", Role.CLIENTE);
-    }
-
-    /**
-     * Cria e persiste um usuário de teste.
-     *
-     * @param login login do usuário
-     * @param email email do usuário
-     * @param nome  nome do usuário
-     * @param role  role do usuário
-     * @return usuário persistido com ID
-     */
     protected Usuario criarUsuarioTeste(String login, String email, String nome, Role role) {
         Usuario usuario = Usuario.builder()
                 .login(login)
@@ -83,9 +99,6 @@ public abstract class IntegrationTestBase {
         return usuarioRepository.save(usuario);
     }
 
-    /**
-     * Converte objeto para JSON.
-     */
     protected String toJson(Object obj) throws Exception {
         return objectMapper.writeValueAsString(obj);
     }
