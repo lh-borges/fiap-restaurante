@@ -9,19 +9,19 @@ INSERT INTO usuarios (login, email, nome, telefone, role, password)
 SELECT seed.login, seed.email, seed.nome, seed.telefone, seed.role, seed.password
 FROM (
          SELECT
-             'admin'                         AS login,
-             'admin@restaurantefiap.com'     AS email,
-             'Admin'                         AS nome,
-             '11999999999'                   AS telefone,
-             'MASTER'                        AS role,
+             'ti' AS login,
+             'ti@restaurantefiap.com' AS email,
+             'TI Admin' AS nome,
+             '11999999999' AS telefone,
+             'MASTER' AS role,
              '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG' AS password
          UNION ALL
          SELECT
-             'gilmar.moraes',
-             'gilmar@restaurantefiap.com',
-             'Gilmar Moraes',
-             '48988887777',
-             'DONO_RESTAURANTE',
+             'master.admin',
+             'admin@restaurantefiap.com',
+             'Master Admin',
+             '11999999999',
+             'MASTER',
              '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
          UNION ALL
          SELECT
@@ -30,6 +30,14 @@ FROM (
              'Danilo Silva',
              '62999999999',
              'MASTER',
+             '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
+         UNION ALL
+         SELECT
+             'gilmar.moraes',
+             'gilmar@restaurantefiap.com',
+             'Gilmar Moraes',
+             '48988887777',
+             'DONO_RESTAURANTE',
              '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
          UNION ALL
          SELECT
@@ -49,7 +57,7 @@ FROM (
              '$2a$12$2twpPEI7vlXS0ZvolDHoOOSGaGh5U6QqQ0ltKH5IrAYT10l8Ws5sG'
          UNION ALL
          SELECT
-             'Luiz.borges',
+             'luiz.borges',
              'luiz.borges@restaurantefiap.com',
              'Luiz Borges',
              '31966665555',
