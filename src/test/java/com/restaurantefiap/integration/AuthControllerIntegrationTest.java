@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class AuthControllerIntegrationTest extends IntegrationTestBase {
 
-    private static final String AUTH_LOGIN_URL = "/auth/login";
+    private static final String AUTH_LOGIN_URL = "/v1/auth/login";
 
     // ========================================================================
     // LOGIN - SUCESSO

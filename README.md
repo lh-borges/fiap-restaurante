@@ -251,7 +251,7 @@ src/main/java/com/restaurantefiap/
 #### 1. Clone o repositório
 ```bash
 
-git clone https://github.com/seu-usuario/fiap-restaurante.git
+git clone https://github.com/lh-borges/fiap-restaurante.git
 cd fiap-restaurante
 ```
 

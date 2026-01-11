@@ -33,7 +33,7 @@ import java.util.List;
  */
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/v1/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
