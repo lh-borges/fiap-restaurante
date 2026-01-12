@@ -1,0 +1,1195 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "API Restaurante FIAP - v1",
+    "description": "Collection completa para testes automatizados da API Restaurante FIAP.\n\n## Como usar:\n1. Importe esta collection no Postman\n2. Importe o arquivo de environment (API_Restaurante_FIAP.postman_environment.json)\n3. Execute via Runner na ordem das pastas\n\n## Fluxo de testes:\n1. Login Admin (obtém token JWT)\n2. CRUD completo de usuários\n3. Testes de validação e erros\n\n## Variáveis geradas automaticamente:\n- `token`: JWT obtido no login\n- `created_user_id`: ID do usuário criado\n- `generated_*`: Dados fictícios gerados em cada request",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "api_version",
+      "value": "v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Autenticação",
+      "item": [
+        {
+          "name": "POST Login - Admin (MASTER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Valida status HTTP",
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida estrutura da resposta",
+                  "pm.test('Resposta contém token JWT', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "    pm.expect(jsonData.token).to.match(/^[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+$/);",
+                  "});",
+                  "",
+                  "// Armazena token para uso nos próximos requests",
+                  "pm.test('Token armazenado com sucesso', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token JWT armazenado:', jsonData.token.substring(0, 50) + '...');",
+                  "});",
+                  "",
+                  "// Valida tempo de resposta",
+                  "pm.test('Tempo de resposta < 2000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Configuração do usuário admin para login",
+                  "// IMPORTANTE: Ajuste conforme seu ambiente",
+                  "console.log('Iniciando login com usuário MASTER...');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"{{admin_login}}\",\n    \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Realiza login com usuário administrador (MASTER ou DONO_RESTAURANTE) para obter token JWT.\n\nO token é armazenado automaticamente na variável `token` para uso nos endpoints subsequentes."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login - Credenciais Inválidas (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém mensagem de erro', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.equal('Authentication Failed');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"usuario.inexistente\",\n    \"password\": \"SenhaErrada@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Teste de login com credenciais inválidas. Deve retornar 401 Unauthorized."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login - Validação (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Resposta indica erro de validação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.equal('Bad Request');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"abc\",\n    \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Teste de validação com login e senha muito curtos. Deve retornar 400 Bad Request."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints de autenticação JWT"
+    },
+    {
+      "name": "02 - Usuários CRUD",
+      "item": [
+        {
+          "name": "POST Criar Usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// ===== GERAÇÃO DE DADOS FICTÍCIOS =====",
+                  "",
+                  "// Gera timestamp único",
+                  "const timestamp = Date.now();",
+                  "const randomSuffix = Math.random().toString(36).substring(2, 8);",
+                  "",
+                  "// Lista de nomes brasileiros",
+                  "const nomes = ['Maria', 'Jose', 'Ana', 'Joao', 'Paulo', 'Thiago', 'Fernanda', 'Gilmar', 'Juliana', 'Luiz'];",
+                  "const sobrenomes = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Lima', 'Dal Olio', 'Borges', 'De Paula', 'Rodrigues', 'Almeida'];",
+                  "",
+                  "// Gera nome aleatório",
+                  "const nome = nomes[Math.floor(Math.random() * nomes.length)];",
+                  "const sobrenome = sobrenomes[Math.floor(Math.random() * sobrenomes.length)];",
+                  "const nomeCompleto = `${nome} ${sobrenome}`;",
+                  "",
+                  "// Gera login válido (letras minúsculas, começa com letra, 5-20 chars)",
+                  "const loginGerado = `user.${randomSuffix}`.toLowerCase();",
+                  "",
+                  "// Gera email único",
+                  "const emailGerado = `teste.${timestamp}.${randomSuffix}@example.com`;",
+                  "",
+                  "// Gera senha forte (mín 8 chars, maiúscula, minúscula, número, símbolo)",
+                  "const senhaGerada = `Teste@${timestamp.toString().slice(-4)}`;",
+                  "",
+                  "// Gera telefone brasileiro válido",
+                  "const ddd = ['11', '21', '31', '41', '51'][Math.floor(Math.random() * 5)];",
+                  "const telefoneGerado = `${ddd}9${Math.floor(Math.random() * 90000000 + 10000000)}`;",
+                  "",
+                  "// Lista de UFs",
+                  "const ufs = ['SP', 'RJ', 'MG', 'RS', 'PR', 'SC', 'BA', 'PE', 'ES', 'GO'];",
+                  "const ufGerada = ufs[Math.floor(Math.random() * ufs.length)];",
+                  "",
+                  "// Gera CEP válido",
+                  "const cepGerado = `${Math.floor(Math.random() * 90000 + 10000)}${Math.floor(Math.random() * 900 + 100)}`;",
+                  "",
+                  "// Armazena nas variáveis da collection",
+                  "pm.collectionVariables.set('generated_login', loginGerado);",
+                  "pm.collectionVariables.set('generated_email', emailGerado);",
+                  "pm.collectionVariables.set('generated_nome', nomeCompleto);",
+                  "pm.collectionVariables.set('generated_senha', senhaGerada);",
+                  "pm.collectionVariables.set('generated_telefone', telefoneGerado);",
+                  "pm.collectionVariables.set('generated_uf', ufGerada);",
+                  "pm.collectionVariables.set('generated_cep', cepGerado);",
+                  "",
+                  "console.log('=== Dados Gerados ===');",
+                  "console.log('Login:', loginGerado);",
+                  "console.log('Email:', emailGerado);",
+                  "console.log('Nome:', nomeCompleto);",
+                  "console.log('Telefone:', telefoneGerado);",
+                  "console.log('Senha:', senhaGerada);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém ID do usuário', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.id).to.be.a('number');",
+                  "    ",
+                  "    // Armazena ID para operações futuras",
+                  "    pm.collectionVariables.set('created_user_id', jsonData.id);",
+                  "    console.log('ID do usuário criado:', jsonData.id);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém dados corretos', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const loginEsperado = pm.collectionVariables.get('generated_login');",
+                  "    const emailEsperado = pm.collectionVariables.get('generated_email');",
+                  "    ",
+                  "    pm.expect(jsonData.login).to.equal(loginEsperado);",
+                  "    pm.expect(jsonData.email).to.equal(emailEsperado);",
+                  "    pm.expect(jsonData.role).to.equal('CLIENTE');",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém campos obrigatórios', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('login');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('nome');",
+                  "    pm.expect(jsonData).to.have.property('telefone');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "    pm.expect(jsonData).to.have.property('criadoEm');",
+                  "});",
+                  "",
+                  "pm.test('Senha NÃO é retornada na resposta', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.not.have.property('password');",
+                  "    pm.expect(jsonData).to.not.have.property('senha');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"{{generated_login}}\",\n    \"email\": \"{{generated_email}}\",\n    \"nome\": \"{{generated_nome}}\",\n    \"telefone\": \"{{generated_telefone}}\",\n    \"role\": \"CLIENTE\",\n    \"password\": \"{{generated_senha}}\",\n    \"endereco\": {\n        \"logradouro\": \"Rua dos Testes\",\n        \"bairro\": \"Centro\",\n        \"cep\": \"{{generated_cep}}\",\n        \"cidade\": \"São Paulo\",\n        \"uf\": \"{{generated_uf}}\",\n        \"numero\": \"123\",\n        \"complemento\": \"Apto 101\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios"
+              ]
+            },
+            "description": "Cria um novo usuário com dados gerados automaticamente.\n\nO script pre-request gera:\n- Login único\n- Email único\n- Nome aleatório\n- Telefone válido\n- Senha forte\n\nO ID do usuário criado é armazenado para uso nos próximos testes."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar Usuários (Paginado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta é uma página válida', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('content');",
+                  "    pm.expect(jsonData.content).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.property('totalElements');",
+                  "    pm.expect(jsonData).to.have.property('totalPages');",
+                  "    pm.expect(jsonData).to.have.property('size');",
+                  "    pm.expect(jsonData).to.have.property('number');",
+                  "});",
+                  "",
+                  "pm.test('Lista contém usuários', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.content.length).to.be.greaterThan(0);",
+                  "});",
+                  "",
+                  "pm.test('Usuários têm estrutura correta', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.content.length > 0) {",
+                  "        const user = jsonData.content[0];",
+                  "        pm.expect(user).to.have.property('id');",
+                  "        pm.expect(user).to.have.property('login');",
+                  "        pm.expect(user).to.have.property('email');",
+                  "        pm.expect(user).to.have.property('nome');",
+                  "        pm.expect(user).to.have.property('role');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/page?page=0&size=10&sort=criadoEm,desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "page"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "criadoEm,desc"
+                }
+              ]
+            },
+            "description": "Lista todos os usuários de forma paginada. Requer role ADMIN (MASTER ou DONO_RESTAURANTE)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar Usuário por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém usuário correto', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const expectedId = parseInt(pm.collectionVariables.get('created_user_id'));",
+                  "    ",
+                  "    pm.expect(jsonData.id).to.equal(expectedId);",
+                  "});",
+                  "",
+                  "pm.test('Usuário tem todos os campos', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('login');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('nome');",
+                  "    pm.expect(jsonData).to.have.property('telefone');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "    pm.expect(jsonData).to.have.property('criadoEm');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/{{created_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "{{created_user_id}}"
+              ]
+            },
+            "description": "Busca um usuário específico pelo ID. Usa o ID do usuário criado anteriormente."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar por Nome",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta é uma lista', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/buscar?nome=Silva",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "Silva"
+                }
+              ]
+            },
+            "description": "Busca usuários pelo nome. Retorna lista de usuários que contêm o termo pesquisado."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar Usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gera novos dados para atualização",
+                  "const nomes = ['Roberto', 'Patricia', 'Marcos', 'Claudia', 'Ricardo'];",
+                  "const sobrenomes = ['Nascimento', 'Carvalho', 'Mendes', 'Barbosa', 'Cardoso'];",
+                  "",
+                  "const nome = nomes[Math.floor(Math.random() * nomes.length)];",
+                  "const sobrenome = sobrenomes[Math.floor(Math.random() * sobrenomes.length)];",
+                  "const nomeAtualizado = `${nome} ${sobrenome} Atualizado`;",
+                  "",
+                  "const ddd = ['11', '21', '31', '41', '51'][Math.floor(Math.random() * 5)];",
+                  "",
+                  "pm.collectionVariables.set('updated_nome', nomeAtualizado);",
+                  "pm.collectionVariables.set('updated_telefone', telefoneAtualizado);",
+                  "",
+                  "console.log('=== Dados para Atualização ===');",
+                  "console.log('Nome:', nomeAtualizado);",
+                  "console.log('Telefone:', telefoneAtualizado);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Nome foi atualizado', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const expectedNome = pm.collectionVariables.get('updated_nome');",
+                  "    pm.expect(jsonData.nome).to.equal(expectedNome);",
+                  "});",
+                  "",
+                  "pm.test('Telefone foi atualizado', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const expectedTelefone = pm.collectionVariables.get('updated_telefone');",
+                  "    pm.expect(jsonData.telefone).to.equal(expectedTelefone);",
+                  "});",
+                  "",
+                  "pm.test('atualizadoEm foi modificado', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('atualizadoEm');",
+                  "    pm.expect(jsonData.atualizadoEm).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{updated_nome}}\",\n    \"telefone\": \"{{updated_telefone}}\",\n    \"endereco\": {\n        \"logradouro\": \"Avenida Atualizada\",\n        \"bairro\": \"Jardins\",\n        \"cep\": \"01310100\",\n        \"cidade\": \"São Paulo\",\n        \"uf\": \"SP\",\n        \"numero\": \"456\",\n        \"complemento\": \"Cobertura\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/{{created_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "{{created_user_id}}"
+              ]
+            },
+            "description": "Atualiza os dados do usuário criado anteriormente com novos dados gerados."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Alterar Senha",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Obtém a senha atual (gerada na criação)",
+                  "const senhaAtual = pm.collectionVariables.get('generated_senha');",
+                  "",
+                  "// Gera nova senha forte",
+                  "const timestamp = Date.now();",
+                  "const novaSenha = `NovaS3nh@${timestamp.toString().slice(-4)}`;",
+                  "",
+                  "pm.collectionVariables.set('senha_atual_para_troca', senhaAtual);",
+                  "pm.collectionVariables.set('nova_senha', novaSenha);",
+                  "",
+                  "console.log('=== Alteração de Senha ===');",
+                  "console.log('Senha Atual:', senhaAtual);",
+                  "console.log('Nova Senha:', novaSenha);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Resposta está vazia (No Content)', function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});",
+                  "",
+                  "// Atualiza a senha armazenada para testes futuros",
+                  "const novaSenha = pm.collectionVariables.get('nova_senha');",
+                  "pm.collectionVariables.set('generated_senha', novaSenha);",
+                  "console.log('Senha atualizada com sucesso!');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"senhaAtual\": \"{{senha_atual_para_troca}}\",\n    \"novaSenha\": \"{{nova_senha}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/{{created_user_id}}/senha",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "{{created_user_id}}",
+                "senha"
+              ]
+            },
+            "description": "Altera a senha do usuário criado. Requer a senha atual para validação."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Meus Dados (/me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém dados do usuário logado', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('login');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('nome');",
+                  "    pm.expect(jsonData).to.have.property('role');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "Retorna os dados do usuário atualmente autenticado (baseado no token JWT)."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Excluir Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Resposta está vazia', function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});",
+                  "",
+                  "console.log('Usuário excluído com sucesso (soft delete)!');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/{{created_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "{{created_user_id}}"
+              ]
+            },
+            "description": "Exclui o usuário criado (soft delete). Requer role MASTER."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Verificar Exclusão (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Mensagem indica recurso não encontrado', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.equal('Resource Not Found');",
+                  "});",
+                  "",
+                  "console.log('Confirmado: usuário não existe mais (soft delete funcionou)');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/{{created_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "{{created_user_id}}"
+              ]
+            },
+            "description": "Verifica que o usuário excluído não é mais encontrado (soft delete)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Operações CRUD completas de usuários"
+    },
+    {
+      "name": "03 - Testes de Erro",
+      "item": [
+        {
+          "name": "GET Sem Autenticação (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 403 Forbidden', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "console.log('Confirmado: endpoint protegido requer autenticação');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/page",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "page"
+              ]
+            },
+            "description": "Tenta acessar endpoint protegido sem token. Deve retornar 403."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Usuário Inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 404 Not Found', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém detalhes do erro', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData.status).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "999999"
+              ]
+            },
+            "description": "Tenta buscar usuário com ID inexistente. Deve retornar 404."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar Usuário - Dados Inválidos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Resposta indica erro de validação', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.equal('Bad Request');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"ab\",\n    \"email\": \"email-invalido\",\n    \"nome\": \"X\",\n    \"telefone\": \"123\",\n    \"role\": \"CLIENTE\",\n    \"password\": \"fraca\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios"
+              ]
+            },
+            "description": "Tenta criar usuário com dados inválidos (login curto, email inválido, senha fraca). Deve retornar 400."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar Usuário - Login Duplicado (400)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Usa o login do admin que já existe",
+                  "const adminLogin = pm.environment.get('admin_login') || pm.collectionVariables.get('admin_login');",
+                  "pm.collectionVariables.set('duplicate_login', adminLogin);",
+                  "console.log('Tentando criar usuário com login duplicado:', adminLogin);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "console.log('Confirmado: não permite login duplicado');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"{{admin_login}}\",\n    \"email\": \"outro.email@teste.com\",\n    \"nome\": \"Usuario Duplicado\",\n    \"telefone\": \"11999998888\",\n    \"role\": \"CLIENTE\",\n    \"password\": \"Senha@Forte123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios"
+              ]
+            },
+            "description": "Tenta criar usuário com login já existente. Deve retornar 400."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Alterar Senha - Senha Atual Incorreta (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code é 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Mensagem indica senha inválida', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title');",
+                  "    pm.expect(jsonData.title).to.equal('Invalid Password');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"senhaAtual\": \"SenhaErrada@999\",\n    \"novaSenha\": \"NovaSenha@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/{{api_version}}/usuarios/1/senha",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{api_version}}",
+                "usuarios",
+                "1",
+                "senha"
+              ]
+            },
+            "description": "Tenta alterar senha com senha atual incorreta. Deve retornar 400."
+          },
+          "response": []
+        }
+      ],
+      "description": "Testes de cenários de erro e validação"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script global de pré-requisição",
+          "console.log('='.repeat(50));",
+          "console.log('Request:', pm.info.requestName);",
+          "console.log('='.repeat(50));"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script global de teste",
+          "pm.test('Resposta não é erro 500', function () {",
+          "    pm.expect(pm.response.code).to.not.equal(500);",
+          "});",
+          "",
+          "pm.test('Content-Type é application/json (quando há body)', function () {",
+          "    if (pm.response.text() && pm.response.text().length > 0) {",
+          "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "    }",
+          "});"
+        ]
+      }
+    }
+  ]
+}

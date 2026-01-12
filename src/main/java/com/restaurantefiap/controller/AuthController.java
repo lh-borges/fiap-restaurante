@@ -23,12 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
  * Controller responsável pelos processos de autenticação.
  * * <p>Provê os endpoints necessários para que os usuários possam se autenticar
  * e obter tokens de acesso JWT para interagir com recursos protegidos.</p>
- * @author Juliana Olio
+ * @author Juliana Dal Olio
  * @author Thiago de Jesus
  * @author Danilo Fernando
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 @Tag(name = "Autenticação", description = "Endpoints de login e geração de tokens")
 @RequiredArgsConstructor
 public class AuthController {

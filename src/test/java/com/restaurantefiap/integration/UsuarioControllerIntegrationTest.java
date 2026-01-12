@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class UsuarioControllerIntegrationTest extends IntegrationTestBase {
 
-    private static final String USUARIOS_URL = "/usuarios";
+    private static final String USUARIOS_URL = "/v1/usuarios";
 
     private String tokenMaster;
     private String tokenDonoRestaurante;
@@ -46,7 +46,7 @@ class UsuarioControllerIntegrationTest extends IntegrationTestBase {
     private String obterToken(String login, String senha) throws Exception {
         AuthRequest request = new AuthRequest(login, senha);
 
-        MvcResult result = mockMvc.perform(post("/auth/login")
+        MvcResult result = mockMvc.perform(post("/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(request)))
                 .andExpect(status().isOk())

@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info; // ESSENCIAL: Importação correta da classe Info
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
@@ -19,12 +19,12 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API Restaurante")
+                        .title("Postech - ADJ - fase 1 - Tech Challenge | API Restaurante")
                         .version("1.0")
-                        .description("Documentação da API para o projeto Fase 1")
+                        .description("Documentação da API para o Postech - ADJ - fase 1 - Tech Challenge")
                         .contact(new Contact()
-                                .name("Equipe A")
-                                .email("restaurante@fiap.com.br")
+                                .name("Equipe 8")
+                                .email("danilo.bossanova@hotmail.com")
                                 .url("https://www.fiap.com.br")
                         )
                 )
