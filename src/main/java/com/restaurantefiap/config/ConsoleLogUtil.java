@@ -1,19 +1,26 @@
 package com.restaurantefiap.config;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
- * Created by julio.bueno on 04/11/2022
+ * Utilitário para formatação de logs no console utilizando códigos ANSI.
+ * Permite a personalização de cores e estilos de texto (negrito, itálico, etc).
+ * @author Danilo de Paula
+ * @since 04/11/2022
  */
-
 public class ConsoleLogUtil {
 
-    @RequiredArgsConstructor
-    public enum Cor{
+    /**
+     * Enumeração que define as cores de texto e fundo disponíveis para o console.
+     */
+    @Getter
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public enum Cor {
         DEFAULT("0m"),
         NORMAL("1m"),
         PRETO("30m"),
@@ -34,11 +41,15 @@ public class ConsoleLogUtil {
         FUNDO_CINZA_TEXTO_BRANCO("47m");
 
         @NonNull
-        private String codigo;
+        private final String codigo;
     }
 
-    @RequiredArgsConstructor
-    public enum Estilo{
+    /**
+     * Enumeração que define os estilos de formatação de texto.
+     */
+    @Getter
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    public enum Estilo {
         NORMAL(0),
         NEGRITO(1),
         ITALICO(3),
@@ -47,25 +58,55 @@ public class ConsoleLogUtil {
         RISCADO(9);
 
         @NonNull
-        private Integer codigo;
+        private final Integer codigo;
     }
 
-    public static String formatar(String texto, Cor cor){
+    /**
+     * Formata um texto com uma cor específica e estilo normal.
+     *
+     * @param texto O conteúdo a ser formatado.
+     * @param cor   A cor desejada para o texto.
+     * @return String formatada com códigos ANSI.
+     */
+    public static String formatar(String texto, Cor cor) {
         return formatar(texto, cor, Estilo.NORMAL);
     }
 
-    public static String formatar(String texto, Estilo... estilos){
+    /**
+     * Formata um texto com a cor normal e um ou mais estilos.
+     *
+     * @param texto   O conteúdo a ser formatado.
+     * @param estilos Lista de estilos (ex: NEGRITO, SUBLINHADO).
+     * @return String formatada com códigos ANSI.
+     */
+    public static String formatar(String texto, Estilo... estilos) {
         return formatar(texto, Cor.NORMAL, estilos);
     }
 
-    public static String formatar(String texto, Cor cor, Estilo... estilos){
-        return code(cor, estilos) + texto + code(Cor.DEFAULT, Estilo.NORMAL);
+    /**
+     * Formata um texto com cor e múltiplos estilos.
+     *
+     * @param texto   O conteúdo a ser formatado.
+     * @param cor     A cor desejada.
+     * @param estilos Lista de estilos.
+     * @return String formatada com códigos ANSI.
+     */
+    public static String formatar(String texto, Cor cor, Estilo... estilos) {
+        return gerarCodigoAnsi(cor, estilos) + texto + gerarCodigoAnsi(Cor.DEFAULT, Estilo.NORMAL);
     }
 
-    private static String code(Cor cor, Estilo... estilos){
-        return
-                "\u001B[" +
-                        Arrays.stream(estilos).map(estilo -> String.valueOf(estilo.codigo)).collect(Collectors.joining(";")) +
-                        ";"+cor.codigo;
+    /**
+     * Constrói a sequência de escape ANSI para a combinação de cor e estilos.
+     *
+     * @param cor     A cor selecionada.
+     * @param estilos Array de estilos selecionados.
+     * @return String contendo o código de escape ANSI.
+     */
+    private static String gerarCodigoAnsi(Cor cor, Estilo... estilos) {
+        String codigosEstilo = Arrays.stream(estilos)
+                .map(estilo -> String.valueOf(estilo.getCodigo()))
+                .collect(Collectors.joining(";"));
+
+        return "\u001B[" + codigosEstilo + ";" + cor.getCodigo();
     }
 }
