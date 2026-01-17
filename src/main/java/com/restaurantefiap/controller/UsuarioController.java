@@ -179,8 +179,8 @@ public class UsuarioController {
 
     /**
      * Realiza a alteração da senha de acesso.
-     * <p><strong>Regra de Ownership:</strong> Por segurança, apenas o próprio usuário autenticado
-     * pode realizar esta operação. Administradores não possuem permissão direta aqui.</p>
+     * <p><strong>Regra de Autorização:</strong> Apenas o próprio usuário ou um MASTER
+     * pode realizar esta operação.</p>
      *
      * @param id  ID do usuário que deseja alterar a senha.
      * @param dto Objeto contendo a senha atual (para validação) e a nova senha.
@@ -193,7 +193,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "403", description = "Acesso negado - apenas o próprio usuário pode alterar sua senha"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
-    @PreAuthorize("@autorizacaoService.isProprioUsuario(#id)")
+    @PreAuthorize("@autorizacaoService.isMasterOuProprio(#id)")
     @PutMapping("/{id:\\d+}/senha")
     public ResponseEntity<Void> alterarSenha(
             @PathVariable Long id,

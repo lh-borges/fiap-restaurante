@@ -82,6 +82,20 @@ public class AutorizacaoService {
     }
 
     /**
+     * Verifica se o usuário é MASTER ou o próprio dono do recurso.
+     *
+     * <p>Usado para operações sensíveis como alteração de senha,
+     * onde apenas o próprio usuário ou um MASTER pode executar.</p>
+     *
+     * @param idRecurso ID do recurso sendo acessado
+     * @return true se é MASTER ou próprio usuário
+     */
+    public boolean isMasterOuProprio(Long idRecurso) {
+        return isMaster() || isProprioUsuario(idRecurso);
+    }
+
+
+    /**
      * Obtém a role do usuário logado a partir do contexto de segurança.
      *
      * @return Role do usuário ou null se não autenticado
